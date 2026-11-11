@@ -1,0 +1,170 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap');
+:root{
+  --ink:#111827; --muted:#5b6472; --line:#e5e7eb; --bg:#ffffff; --soft:#f6f7f5;
+  --accent:#0f766e; --accent-soft:#e6f3f1; --warn:#b45309; --warn-soft:#fdf3e6; --bad:#b91c1c;
+  --c1:#0f766e; --c2:#2f8f83; --c3:#6aa9a0; --c4:#c08a3e; --c5:#b45309;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.65;font-size:17px;-webkit-font-smoothing:antialiased}
+.wide{max-width:1040px;margin:0 auto;padding:0 22px}
+h2{font-family:"Source Serif 4",Georgia,serif;font-size:30px;line-height:1.2;margin:56px 0 12px}
+h3{font-size:18px;margin:28px 0 8px}
+/* stats band */
+.band{background:var(--soft);padding:44px 0 48px;border-bottom:1px solid var(--line)}
+.band h2{margin-top:0}
+/* charts */
+figure{margin:28px 0;padding:20px;border:1px solid var(--line);border-radius:12px}
+.ftitle{font-weight:600;font-size:15px;margin-bottom:14px}
+/* calculator */
+.calc{background:var(--soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:46px 0;margin-top:56px}
+.calc h2{margin-top:0}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:20px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px}
+.panel h3{margin:0 0 12px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.field{margin-bottom:14px}
+.field label{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:6px}
+.field label span{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.field .hint{font-size:12.5px;color:var(--muted);margin-top:4px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select,input[type=number]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
+.out{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.ob{border:1px solid var(--line);border-radius:10px;padding:12px}
+.ob .k{font-size:12.5px;color:var(--muted)}
+.ob .x{font-size:24px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.ob.big{grid-column:1/-1;background:var(--accent-soft);border-color:#b8dcd6}
+.ob.big.neg{background:#fdecec;border-color:#f3c2c2}
+.ob.big .x{font-size:30px}
+.formula{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--soft);border-radius:8px;padding:10px 12px;color:var(--muted);line-height:1.55;white-space:pre-wrap}
+.cmp .r{display:grid;grid-template-columns:120px 1fr 66px;gap:8px;align-items:center;margin:6px 0;font-size:13px}
+.cmp .t{height:16px;background:var(--soft);border-radius:4px;overflow:hidden}
+.cmp .f{height:100%;border-radius:4px}
+.cmp .v{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.cmp .r.sel{font-weight:700}
+.cgrid{grid-template-columns:1fr}
+@media (max-width:760px){.cgrid{grid-template-columns:1fr}}
+.calc{margin-top:0}
+.credit{font-size:12.5px;color:var(--muted);margin-top:14px}
+
+</style>
+
+<section class="calc" id="calculator">
+  <div class="wide">
+    <h2>Data Pipeline CO₂ Calculator</h2>
+    <p style="max-width:760px;color:var(--muted)">Estimate the annual operational CO₂ of a data pipeline, and the net effect when it reduces volume before your analytics platform. All defaults are adjustable assumptions: replace them with your own benchmark figures for a defensible result.</p>
+    <div class="cgrid">
+      <div class="panel">
+        <h3>Workload &amp; software</h3>
+        <div class="field"><label>Daily ingest volume <span id="volV"></span></label><input type="range" id="vol" min="0.5" max="50" step="0.5" value="7"><div class="hint">TB per day entering the pipeline</div></div>
+        <div class="field"><label>Pipeline runtime class</label>
+          <select id="rt"></select></div>
+        <div class="field"><label>Baseline throughput per vCPU <span id="baseV"></span></label><input type="range" id="base" min="10" max="200" step="5" value="50"><div class="hint">GB/day one vCPU handles on a compiled, GC-free runtime. Other classes are scaled from this.</div></div>
+        <div class="field"><label>Volume reduced before analytics tier <span id="redV"></span></label><input type="range" id="red" min="0" max="80" step="1" value="45"></div>
+        <div class="field"><label>Analytics tier throughput per vCPU <span id="dsV"></span></label><input type="range" id="ds" min="3" max="40" step="0.1" value="11.7"><div class="hint">GB/day per vCPU in the downstream platform (example: 600 vCPU for 7 TB/day ≈ 11.7)</div></div>
+        <h3 style="margin-top:22px">Hardware &amp; facility</h3>
+        <div class="field"><label>Server CPU generation</label>
+          <select id="hw"></select></div>
+        <div class="field"><label>Average CPU utilisation <span id="utilV"></span></label><input type="range" id="util" min="10" max="90" step="5" value="50"></div>
+        <div class="field"><label>Data-centre PUE <span id="pueV"></span></label><input type="range" id="pue" min="1.05" max="2.2" step="0.01" value="1.56"></div>
+        <div class="field"><label>Grid carbon intensity</label>
+          <select id="grid"></select></div>
+        <div class="field" id="customWrap" style="display:none"><label>Custom intensity (gCO₂e/kWh)</label><input type="number" id="custom" value="400" min="0" max="1200"></div>
+      </div>
+      <div class="panel">
+        <h3>Annual result</h3>
+        <div class="out">
+          <div class="ob"><div class="k">Pipeline vCPU</div><div class="x" id="oV">–</div></div>
+          <div class="ob"><div class="k">Pipeline RAM</div><div class="x" id="oR">–</div></div>
+          <div class="ob"><div class="k">Pipeline energy</div><div class="x" id="oE">–</div></div>
+          <div class="ob"><div class="k">Pipeline CO₂ emitted</div><div class="x" id="oC">–</div></div>
+          <div class="ob"><div class="k">Analytics vCPU avoided</div><div class="x" id="oDV">–</div></div>
+          <div class="ob"><div class="k">Gross CO₂ avoided downstream</div><div class="x" id="oDC">–</div></div>
+          <div class="ob big" id="netBox"><div class="k" id="netK">Net CO₂ avoided per year</div><div class="x" id="oN">–</div><div class="k" id="netMsg" style="margin-top:4px"></div></div>
+        </div>
+        <div class="ftitle" style="font-size:14px">Pipeline CO₂ per year, same workload, by runtime class</div>
+        <div class="cmp" id="cmp"></div>
+        <div class="formula" id="formula" style="margin-top:14px"></div>
+      </div>
+    </div>
+    <p class="credit">From the article "The Hidden Carbon Cost of Data Pipelines". Estimates only; operational electricity; real values vary.</p>
+  </div>
+</section>
+
+<script>
+// ---------- calculator ----------
+const RT=[
+  {id:'native',name:'Compiled, no GC (C, C++, Rust)',short:'Compiled, no GC',cpu:1.0,ram:1.0,col:'var(--c1)'},
+  {id:'gc',name:'Compiled with GC (Go)',short:'Compiled + GC',cpu:1.5,ram:1.5,col:'var(--c2)'},
+  {id:'vm',name:'Managed VM / JIT (Java, C#)',short:'Managed VM',cpu:2.0,ram:3.0,col:'var(--c3)'},
+  {id:'js',name:'JavaScript engine (Node.js)',short:'JS engine',cpu:2.5,ram:2.0,col:'var(--c4)'},
+  {id:'interp',name:'Interpreted (Python, Ruby)',short:'Interpreted',cpu:4.0,ram:2.0,col:'var(--c5)'}
+];
+const HW=[
+  {id:'old',name:'Older generation (c. 2014)',min:1.90,max:5.99},
+  {id:'mid',name:'Mid generation (c. 2016)',min:0.71,max:3.54},
+  {id:'new',name:'Recent generation (c. 2021)',min:0.45,max:1.87}
+];
+const GRID=[
+  {v:458,n:'Global average 2025 (458)'},
+  {v:525,n:'China 2025 (525)'},
+  {v:384,n:'United States 2024 (384)'},
+  {v:50,n:'Low-carbon grid, hydro/nuclear-heavy (~50, illustrative)'},
+  {v:400,n:'Gas-dominant grid (~400, illustrative)'},
+  {v:700,n:'Coal-heavy grid (~700, illustrative)'},
+  {v:-1,n:'Custom…'}
+];
+const W_PER_GB_RAM=0.392, HRS=8760, DS_RAM_PER_VCPU=4;
+const $=id=>document.getElementById(id);
+$('rt').innerHTML=RT.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
+$('hw').innerHTML=HW.map(h=>`<option value="${h.id}" ${h.id==='mid'?'selected':''}>${h.name}</option>`).join('');
+$('grid').innerHTML=GRID.map((g,i)=>`<option value="${g.v}">${g.n}</option>`).join('');
+
+function fmt(n,d=0){return n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d})}
+function tonnes(kg){return Math.abs(kg)>=1000?fmt(kg/1000,1)+' t':fmt(kg)+' kg'}
+
+function footprint(vcpu,ramGB,wPerVcpu,pue,gi){
+  const watts=vcpu*wPerVcpu+ramGB*W_PER_GB_RAM;
+  const kwh=watts*HRS/1000*pue;
+  return {kwh,kg:kwh*gi/1000};
+}
+function calc(){
+  const vol=+$('vol').value, base=+$('base').value, red=+$('red').value/100, ds=+$('ds').value;
+  const util=+$('util').value/100, pue=+$('pue').value;
+  let gi=+$('grid').value; $('customWrap').style.display=gi<0?'block':'none'; if(gi<0) gi=Math.max(0,+$('custom').value||0);
+  const hw=HW.find(h=>h.id===$('hw').value), rt=RT.find(r=>r.id===$('rt').value);
+  $('volV').textContent=vol+' TB/day'; $('baseV').textContent=base+' GB/day'; $('redV').textContent=Math.round(red*100)+'%';
+  $('dsV').textContent=ds.toFixed(1)+' GB/day'; $('utilV').textContent=Math.round(util*100)+'%'; $('pueV').textContent=pue.toFixed(2);
+
+  const wv=hw.min+util*(hw.max-hw.min);
+  const pipe=r=>{const v=Math.ceil(vol*1000/(base/r.cpu));const ram=v*r.ram;return {v,ram,...footprint(v,ram,wv,pue,gi)}};
+  const p=pipe(rt);
+  const dsV=Math.round(vol*1000*red/ds);
+  const d=footprint(dsV,dsV*DS_RAM_PER_VCPU,wv,pue,gi);
+  const net=d.kg-p.kg;
+
+  $('oV').textContent=fmt(p.v); $('oR').textContent=fmt(p.ram)+' GB';
+  $('oE').textContent=fmt(p.kwh/1000,1)+' MWh'; $('oC').textContent=tonnes(p.kg);
+  $('oDV').textContent=fmt(dsV); $('oDC').textContent=tonnes(d.kg);
+  const nb=$('netBox');
+  if(net>=0){nb.classList.remove('neg');$('netK').textContent='Net CO₂ avoided per year';$('oN').textContent=tonnes(net);
+    $('netMsg').textContent=d.kg>0?`The pipeline uses ${Math.round(p.kg/d.kg*100)}% of the CO₂ it saves downstream.`:'';}
+  else{nb.classList.add('neg');$('netK').textContent='Net CO₂ ADDED per year';$('oN').textContent=tonnes(-net);
+    $('netMsg').textContent='The pipeline emits more than the downstream compute it removes.';}
+
+  const all=RT.map(r=>({r,kg:pipe(r).kg})); const mx=Math.max(...all.map(a=>a.kg),d.kg)||1;
+  $('cmp').innerHTML=all.map(a=>`<div class="r ${a.r.id===rt.id?'sel':''}"><div>${a.r.short}</div><div class="t"><div class="f" style="width:${a.kg/mx*100}%;background:${a.r.col}"></div></div><div class="v">${tonnes(a.kg)}</div></div>`).join('')+
+    `<div class="r" style="margin-top:10px;border-top:1px dashed var(--line);padding-top:8px"><div>Saved downstream</div><div class="t"><div class="f" style="width:${d.kg/mx*100}%;background:#9ca3af"></div></div><div class="v">${tonnes(d.kg)}</div></div>`;
+
+  $('formula').textContent=
+`W per vCPU = ${hw.min} + ${util.toFixed(2)} × (${hw.max} − ${hw.min}) = ${wv.toFixed(2)} W
+Pipeline vCPU = ${vol} TB × 1000 ÷ (${base} ÷ ${rt.cpu}) = ${p.v}
+Pipeline RAM = vCPU × ${rt.ram} GB = ${fmt(p.ram)} GB  (× ${W_PER_GB_RAM} W/GB)
+kWh/yr = watts × 8,760 h × PUE ${pue.toFixed(2)}
+CO₂ = kWh × ${gi} g/kWh
+Analytics vCPU avoided = ${vol} TB × ${Math.round(red*100)}% ÷ ${ds} GB = ${dsV}  (${DS_RAM_PER_VCPU} GB RAM each)
+Net = downstream CO₂ avoided − pipeline CO₂`;
+}
+['vol','base','red','ds','util','pue','custom'].forEach(id=>$(id).addEventListener('input',calc));
+['rt','hw','grid'].forEach(id=>$(id).addEventListener('change',calc));
+calc();
+</script>
