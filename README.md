@@ -4,6 +4,13 @@ A single-file, dependency-free calculator that estimates the **annual operationa
 
 Companion to the article *The Hidden Carbon Cost of Data Pipelines*.
 
+## Files
+
+```
+index.html   # the calculator (HTML, CSS and JS in one file)
+README.md
+```
+
 ## Features
 
 - Compares five runtime classes for the same workload: compiled with no GC, compiled with GC, managed VM, JavaScript engine and interpreted
@@ -16,7 +23,8 @@ Companion to the article *The Hidden Carbon Cost of Data Pipelines*.
 
 | Where | How |
 |---|---|
-| **Browser** | Save the file as `calculator.html` and open it. |
+| **Browser** | Clone the repo and open `index.html`. |
+| **GitHub Pages** | **Settings → Pages →** deploy from the `main` branch, root folder. The calculator is served at `https://<user>.github.io/<repo>/`. |
 | **CodePen** | Paste the whole file into the **HTML** panel only. Leave CSS and JS empty. |
 | **Medium** | Paste the public CodePen pen URL on its own line and press Enter. Medium doesn't accept iframe or embed code. |
 | **Website / CMS** | Paste into any HTML block that allows `<style>` and `<script>`. |
@@ -61,7 +69,7 @@ These factors are deliberately conservative assumptions. Published benchmarks sh
 
 ## Customising
 
-All assumptions are constants at the top of the `<script>` block:
+All assumptions are constants at the top of the `<script>` block in `index.html`:
 
 - `RT`: runtime classes and their CPU and RAM factors
 - `HW`: CPU generations, with idle and maximum watts per vCPU
